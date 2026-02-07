@@ -17,9 +17,8 @@ export async function registerRoutes(
   // Users List (for Dropdown)
   app.get(api.users.list.path, async (req, res) => {
     const users = await storage.getAllUsers();
-    // Filter to only send necessary info for dropdown (security)
-    // For simplicity sending full objects but ideally should strip passwords (which are hashed anyway)
-    res.json(users);
+    const safeUsers = users.map(({ password, ...rest }) => rest);
+    res.json(safeUsers);
   });
 
   // Rooms List
