@@ -9,6 +9,7 @@ export function useRooms() {
       if (!res.ok) throw new Error("Fehler beim Laden der Raeume");
       return api.rooms.list.responses[200].parse(await res.json());
     },
+    refetchInterval: 30000,
   });
 }
 
@@ -20,6 +21,7 @@ export function useBookings() {
       if (!res.ok) throw new Error("Fehler beim Laden der Buchungen");
       return api.bookings.list.responses[200].parse(await res.json());
     },
+    refetchInterval: 30000,
   });
 }
 
@@ -68,6 +70,7 @@ export function useMessages() {
       if (!res.ok) throw new Error("Nachrichten konnten nicht geladen werden");
       return api.messages.list.responses[200].parse(await res.json());
     },
+    refetchInterval: 30000,
   });
 }
 
