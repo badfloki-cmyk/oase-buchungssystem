@@ -36,6 +36,8 @@ export function useAuth() {
     },
     onSuccess: (user) => {
       queryClient.setQueryData([api.auth.user.path], user);
+      queryClient.invalidateQueries({ queryKey: [api.bookings.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.rooms.list.path] });
       if (user.role === "admin") {
         setLocation("/admin/dashboard");
       } else {
