@@ -35,7 +35,8 @@ export interface IStorage {
 
   // Settings
   getSettings(): Promise<Settings | undefined>;
-  updateSettings(resetAt: Date | null): Promise<Settings>;
+  updateSettings(data: { resetDay1: number | null; resetDay2: number | null; resetTime: string | null }): Promise<Settings>;
+  markResetDone(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -139,14 +140,21 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async updateSettings(resetAt: Date | null): Promise<Settings> {
+  async updateSettings(data: { resetDay1: number | null; resetDay2: number | null; resetTime: string | null }): Promise<Settings> {
     const existing = await this.getSettings();
     if (existing) {
-      const [updated] = await db.update(settings).set({ resetAt }).where(eq(settings.id, existing.id)).returning();
+      const [updated] = await db.update(settings).set(data).where(eq(settings.id, existing.id)).returning();
       return updated;
     } else {
-      const [inserted] = await db.insert(settings).values({ resetAt }).returning();
+      const [inserted] = await db.insert(settings).values(data).returning();
       return inserted;
+    }
+  }
+
+  async markResetDone(): Promise<void> {
+    const existing = await this.getSettings();
+    if (existing) {
+      await db.update(settings).set({ lastResetAt: new Date() }).where(eq(settings.id, existing.id));
     }
   }
 }

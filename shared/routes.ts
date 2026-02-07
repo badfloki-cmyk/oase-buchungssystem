@@ -156,7 +156,12 @@ export const api = {
       method: 'GET' as const,
       path: '/api/admin/settings' as const,
       responses: {
-        200: z.object({ resetAt: z.string().nullable() }),
+        200: z.object({
+          resetDay1: z.number().nullable(),
+          resetDay2: z.number().nullable(),
+          resetTime: z.string().nullable(),
+          lastResetAt: z.string().nullable(),
+        }),
         401: errorSchemas.unauthorized,
       },
     },
@@ -164,10 +169,17 @@ export const api = {
       method: 'POST' as const,
       path: '/api/admin/settings' as const,
       input: z.object({
-        resetAt: z.string().nullable(),
+        resetDay1: z.number().nullable(),
+        resetDay2: z.number().nullable(),
+        resetTime: z.string().nullable(),
       }),
       responses: {
-        200: z.object({ resetAt: z.string().nullable() }),
+        200: z.object({
+          resetDay1: z.number().nullable(),
+          resetDay2: z.number().nullable(),
+          resetTime: z.string().nullable(),
+          lastResetAt: z.string().nullable(),
+        }),
         401: errorSchemas.unauthorized,
       },
     }

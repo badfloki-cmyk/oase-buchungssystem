@@ -152,11 +152,11 @@ export function useSettings() {
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (resetAt: string | null) => {
+    mutationFn: async (data: { resetDay1: number | null; resetDay2: number | null; resetTime: string | null }) => {
       const res = await fetch(api.admin.updateSettings.path, {
         method: api.admin.updateSettings.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resetAt }),
+        body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Einstellungen konnten nicht gespeichert werden");
       return res.json();

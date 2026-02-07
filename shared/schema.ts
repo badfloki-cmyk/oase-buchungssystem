@@ -33,7 +33,10 @@ export const messages = pgTable("messages", {
 
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
-  resetAt: timestamp("reset_at"),
+  resetDay1: integer("reset_day_1"),
+  resetDay2: integer("reset_day_2"),
+  resetTime: text("reset_time"),
+  lastResetAt: timestamp("last_reset_at"),
 });
 
 // Schemas

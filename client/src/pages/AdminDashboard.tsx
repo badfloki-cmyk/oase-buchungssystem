@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Send, RefreshCw, Users, Pencil, Clock, CalendarDays } from "lucide-react";
+import { Trash2, Send, RefreshCw, Users, Pencil, Clock, CalendarDays, Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -35,9 +36,15 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [resetDate, setResetDate] = useState("");
+  const [resetDay1, setResetDay1] = useState("");
+  const [resetDay2, setResetDay2] = useState("");
   const [resetTime, setResetTime] = useState("");
   const { toast } = useToast();
+
+  const dayNames: Record<number, string> = {
+    0: "Sonntag", 1: "Montag", 2: "Dienstag", 3: "Mittwoch",
+    4: "Donnerstag", 5: "Freitag", 6: "Samstag"
+  };
 
   const handlePostMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,19 +86,23 @@ export default function AdminDashboard() {
 
   const handleScheduleReset = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetDate || !resetTime) return;
-    const resetAt = new Date(`${resetDate}T${resetTime}`).toISOString();
-    updateSettings(resetAt, {
+    if (!resetDay1 || !resetDay2 || !resetTime) return;
+    updateSettings({
+      resetDay1: parseInt(resetDay1),
+      resetDay2: parseInt(resetDay2),
+      resetTime,
+    }, {
       onSuccess: () => {
-        toast({ title: "Automatischer Reset geplant" });
-        setResetDate("");
+        toast({ title: "Wöchentlicher Reset geplant" });
+        setResetDay1("");
+        setResetDay2("");
         setResetTime("");
       }
     });
   };
 
   const handleClearSchedule = () => {
-    updateSettings(null, {
+    updateSettings({ resetDay1: null, resetDay2: null, resetTime: null }, {
       onSuccess: () => {
         toast({ title: "Geplanter Reset entfernt" });
       }
@@ -105,7 +116,7 @@ export default function AdminDashboard() {
     return acc;
   }, {} as Record<string, typeof bookings>);
 
-  const scheduledReset = settings?.resetAt ? new Date(settings.resetAt) : null;
+  const hasSchedule = settings?.resetDay1 != null && settings?.resetDay2 != null && settings?.resetTime;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -196,14 +207,19 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 space-y-4">
-                {scheduledReset && (
+                {hasSchedule && (
                   <div className="flex items-center justify-between p-3 bg-primary/10 rounded-md flex-wrap gap-2">
                     <div>
-                      <p className="text-sm font-medium text-foreground">Geplant:</p>
+                      <p className="text-sm font-medium text-foreground">Aktiver Zeitplan:</p>
                       <p className="text-sm text-muted-foreground">
                         <CalendarDays className="inline h-3 w-3 mr-1" />
-                        {scheduledReset.toLocaleDateString('de-DE')} um {scheduledReset.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                        {dayNames[settings!.resetDay1!]} & {dayNames[settings!.resetDay2!]} um {settings!.resetTime}
                       </p>
+                      {settings?.lastResetAt && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Letzter Reset: {new Date(settings.lastResetAt).toLocaleDateString('de-DE')} {new Date(settings.lastResetAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
                     </div>
                     <Button variant="ghost" size="icon" onClick={handleClearSchedule} data-testid="button-clear-schedule">
                       <Trash2 className="h-4 w-4" />
@@ -211,26 +227,49 @@ export default function AdminDashboard() {
                   </div>
                 )}
                 <form onSubmit={handleScheduleReset} className="space-y-3">
-                  <Input
-                    type="date"
-                    value={resetDate}
-                    onChange={(e) => setResetDate(e.target.value)}
-                    data-testid="input-reset-date"
-                  />
-                  <Input
-                    type="time"
-                    value={resetTime}
-                    onChange={(e) => setResetTime(e.target.value)}
-                    data-testid="input-reset-time"
-                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Tag 1</label>
+                    <Select onValueChange={setResetDay1} value={resetDay1}>
+                      <SelectTrigger data-testid="select-reset-day1">
+                        <SelectValue placeholder="Wochentag..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(dayNames).map(([val, name]) => (
+                          <SelectItem key={val} value={val}>{name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Tag 2</label>
+                    <Select onValueChange={setResetDay2} value={resetDay2}>
+                      <SelectTrigger data-testid="select-reset-day2">
+                        <SelectValue placeholder="Wochentag..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(dayNames).map(([val, name]) => (
+                          <SelectItem key={val} value={val}>{name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Uhrzeit</label>
+                    <Input
+                      type="time"
+                      value={resetTime}
+                      onChange={(e) => setResetTime(e.target.value)}
+                      data-testid="input-reset-time"
+                    />
+                  </div>
                   <Button 
                     type="submit" 
                     className="w-full"
-                    disabled={isSavingSettings || !resetDate || !resetTime}
+                    disabled={isSavingSettings || !resetDay1 || !resetDay2 || !resetTime}
                     data-testid="button-schedule-reset"
                   >
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    Reset planen
+                    <Check className="mr-2 h-4 w-4" />
+                    Zeitplan speichern
                   </Button>
                 </form>
               </CardContent>

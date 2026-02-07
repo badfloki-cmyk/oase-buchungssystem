@@ -124,15 +124,25 @@ export async function registerRoutes(
   // Admin Settings & Reset
   app.get(api.admin.getSettings.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
-    const settings = await storage.getSettings();
-    res.json({ resetAt: settings?.resetAt?.toISOString() || null });
+    const s = await storage.getSettings();
+    res.json({
+      resetDay1: s?.resetDay1 ?? null,
+      resetDay2: s?.resetDay2 ?? null,
+      resetTime: s?.resetTime ?? null,
+      lastResetAt: s?.lastResetAt?.toISOString() ?? null,
+    });
   });
 
   app.post(api.admin.updateSettings.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
-    const { resetAt } = api.admin.updateSettings.input.parse(req.body);
-    const updated = await storage.updateSettings(resetAt ? new Date(resetAt) : null);
-    res.json({ resetAt: updated.resetAt?.toISOString() || null });
+    const { resetDay1, resetDay2, resetTime } = api.admin.updateSettings.input.parse(req.body);
+    const updated = await storage.updateSettings({ resetDay1, resetDay2, resetTime });
+    res.json({
+      resetDay1: updated.resetDay1 ?? null,
+      resetDay2: updated.resetDay2 ?? null,
+      resetTime: updated.resetTime ?? null,
+      lastResetAt: updated.lastResetAt?.toISOString() ?? null,
+    });
   });
 
   app.post(api.admin.reset.path, async (req, res) => {
@@ -144,14 +154,32 @@ export async function registerRoutes(
   // SEED DATA
   await seedDatabase();
 
-  // Auto-reset timer: check every 60 seconds
+  // Auto-reset timer: check every 60 seconds for weekly recurring resets
   setInterval(async () => {
     try {
-      const settings = await storage.getSettings();
-      if (settings?.resetAt && new Date(settings.resetAt) <= new Date()) {
-        console.log("Auto-reset triggered at", new Date().toISOString());
+      const s = await storage.getSettings();
+      if (!s || s.resetDay1 == null || s.resetDay2 == null || !s.resetTime) return;
+
+      const now = new Date();
+      const currentDay = now.getDay(); // 0=Sunday, 1=Monday, ...
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+      const isResetDay = currentDay === s.resetDay1 || currentDay === s.resetDay2;
+      const isPastTime = currentTime >= s.resetTime;
+
+      if (isResetDay && isPastTime) {
+        // Check if already reset today
+        if (s.lastResetAt) {
+          const lastReset = new Date(s.lastResetAt);
+          const sameDay = lastReset.getFullYear() === now.getFullYear() &&
+                          lastReset.getMonth() === now.getMonth() &&
+                          lastReset.getDate() === now.getDate();
+          if (sameDay) return; // Already reset today
+        }
+
+        console.log("Weekly auto-reset triggered at", now.toISOString());
         await storage.resetBookings();
-        await storage.updateSettings(null);
+        await storage.markResetDone();
       }
     } catch (err) {
       console.error("Auto-reset check failed:", err);
