@@ -191,8 +191,17 @@ export async function registerRoutes(
 
 async function seedDatabase() {
   const users = await storage.getAllUsers();
+  const existingRooms = await storage.getRooms();
+  
+  if (existingRooms.length === 0) {
+    console.log("Seeding Rooms...");
+    await storage.createRoom({ name: "Mathe", teacher: "Haenicke", capacity: 25 });
+    await storage.createRoom({ name: "Deutsch", teacher: "Hofer", capacity: 25 });
+    await storage.createRoom({ name: "Englisch", teacher: "Wischinski", capacity: 25 });
+  }
+
   if (users.length === 0) {
-    console.log("Seeding Database...");
+    console.log("Seeding Users...");
     
     // Create Admin
     await storage.createUser({
@@ -201,11 +210,6 @@ async function seedDatabase() {
       role: "admin",
       className: "Staff"
     });
-
-    // Create Rooms
-    await storage.createRoom({ name: "Mathe", teacher: "Haenicke", capacity: 25 });
-    await storage.createRoom({ name: "Deutsch", teacher: "Hofer", capacity: 25 });
-    await storage.createRoom({ name: "Englisch", teacher: "Wischinski", capacity: 25 });
 
     const students = [
       // 10R2
