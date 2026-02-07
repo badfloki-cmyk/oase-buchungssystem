@@ -30,6 +30,12 @@ export interface IStorage {
   // Messages
   getMessages(): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  updateMessage(id: number, content: string): Promise<Message>;
+  deleteMessage(id: number): Promise<void>;
+
+  // Settings
+  getSettings(): Promise<Settings | undefined>;
+  updateSettings(resetAt: Date | null): Promise<Settings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -117,6 +123,31 @@ export class DatabaseStorage implements IStorage {
   async createMessage(message: InsertMessage): Promise<Message> {
     const [newMessage] = await db.insert(messages).values(message).returning();
     return newMessage;
+  }
+
+  async updateMessage(id: number, content: string): Promise<Message> {
+    const [updated] = await db.update(messages).set({ content }).where(eq(messages.id, id)).returning();
+    return updated;
+  }
+
+  async deleteMessage(id: number): Promise<void> {
+    await db.delete(messages).where(eq(messages.id, id));
+  }
+
+  async getSettings(): Promise<Settings | undefined> {
+    const [result] = await db.select().from(settings).limit(1);
+    return result;
+  }
+
+  async updateSettings(resetAt: Date | null): Promise<Settings> {
+    const existing = await this.getSettings();
+    if (existing) {
+      const [updated] = await db.update(settings).set({ resetAt }).where(eq(settings.id, existing.id)).returning();
+      return updated;
+    } else {
+      const [inserted] = await db.insert(settings).values({ resetAt }).returning();
+      return inserted;
+    }
   }
 }
 

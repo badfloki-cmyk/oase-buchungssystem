@@ -31,19 +31,27 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  resetAt: timestamp("reset_at"),
+});
+
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
 export const insertRoomSchema = createInsertSchema(rooms);
 export const insertBookingSchema = createInsertSchema(bookings);
 export const insertMessageSchema = createInsertSchema(messages);
+export const insertSettingsSchema = createInsertSchema(settings);
 
 // Types
 export type User = typeof users.$inferSelect;
 export type Room = typeof rooms.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type Settings = typeof settings.$inferSelect;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;

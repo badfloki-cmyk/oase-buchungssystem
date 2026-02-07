@@ -99,7 +99,6 @@ export async function registerRoutes(
 
   app.post(api.messages.create.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
-    
     const { content } = api.messages.create.input.parse(req.body);
     const message = await storage.createMessage({
       content,
@@ -108,7 +107,35 @@ export async function registerRoutes(
     res.status(201).json(message);
   });
 
-  // Admin Reset
+  app.patch(api.messages.update.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    const { content } = api.messages.update.input.parse(req.body);
+    const updated = await storage.updateMessage(id, content);
+    res.json(updated);
+  });
+
+  app.delete(api.messages.delete.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
+    const id = parseInt(req.params.id);
+    await storage.deleteMessage(id);
+    res.sendStatus(204);
+  });
+
+  // Admin Settings & Reset
+  app.get(api.admin.getSettings.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
+    const settings = await storage.getSettings();
+    res.json({ resetAt: settings?.resetAt?.toISOString() || null });
+  });
+
+  app.post(api.admin.updateSettings.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
+    const { resetAt } = api.admin.updateSettings.input.parse(req.body);
+    const updated = await storage.updateSettings(resetAt ? new Date(resetAt) : null);
+    res.json({ resetAt: updated.resetAt?.toISOString() || null });
+  });
+
   app.post(api.admin.reset.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
     await storage.resetBookings();
@@ -129,11 +156,7 @@ async function seedDatabase() {
     // Create Admin
     await storage.createUser({
       username: "admin",
-      password: "adminpassword", // In real app, hash this! Auth setup handles hashing usually, but for seed simple is ok if matched. 
-      // ACTUALLY: The auth.ts (which we need to write) will likely use scrypt. 
-      // For the seed, we should ideally use the same hashing or just plaintext if our auth strategy allows it for dev.
-      // I'll stick to plaintext for now and assume the scrypt verify function handles it or we update it.
-      // Wait, standard passport-local template uses scrypt. I need to helper.
+      password: "adminpassword",
       role: "admin",
       className: "Staff"
     });
@@ -143,22 +166,84 @@ async function seedDatabase() {
     await storage.createRoom({ name: "Deutsch", teacher: "Hofer", capacity: 25 });
     await storage.createRoom({ name: "Englisch", teacher: "Wischinski", capacity: 25 });
 
-    // Create Students
-    const classes = [
-      { name: "10H", students: ["Max M", "Lisa L", "Tom T"] },
-      { name: "10R1", students: ["Sarah S", "Ben B", "Anna A"] },
-      { name: "10R2", students: ["Kevin K", "Julia J", "David D"] }
+    const students = [
+      // 10R2
+      { name: "Al Saleh, Raman Jamal Hassan", class: "10R2" },
+      { name: "Albrecht, Anna", class: "10R2" },
+      { name: "Amrein, Saphira Juliana", class: "10R2" },
+      { name: "Böcker, Fynn", class: "10R2" },
+      { name: "Bullerdiek, Lennart Fynn", class: "10R2" },
+      { name: "Dürre, Tayler", class: "10R2" },
+      { name: "Fiolka, Maya", class: "10R2" },
+      { name: "Gorani, Adelina", class: "10R2" },
+      { name: "Griebe, Luca Finn", class: "10R2" },
+      { name: "Hoppe, Zoe", class: "10R2" },
+      { name: "Krawzow, Liliana", class: "10R2" },
+      { name: "Mela Ali, Amina", class: "10R2" },
+      { name: "Melnik, Dennis", class: "10R2" },
+      { name: "Önel, Mirxan", class: "10R2" },
+      { name: "Rißland, Lukas", class: "10R2" },
+      { name: "Salewski, Anthony", class: "10R2" },
+      { name: "Skala, Julia", class: "10R2" },
+      { name: "Spangenberg, Zaira Maja Josephine", class: "10R2" },
+      { name: "Sünnemann, Ole", class: "10R2" },
+      { name: "Sulek, Tom", class: "10R2" },
+      { name: "Teiwes, Lena-Marie", class: "10R2" },
+      { name: "Titze, Niclas", class: "10R2" },
+      { name: "Wahle, Thilo", class: "10R2" },
+      { name: "Weimann, Daniel", class: "10R2" },
+      { name: "Zorlu, Nilay", class: "10R2" },
+      // 10R1
+      { name: "Bartels, Ilayda Derya", class: "10R1" },
+      { name: "Bartram, Mia", class: "10R1" },
+      { name: "Beichert, Maximilian", class: "10R1" },
+      { name: "Berauer, Bianka", class: "10R1" },
+      { name: "Braun, Chris", class: "10R1" },
+      { name: "Bullerdiek, Titus Jonah", class: "10R1" },
+      { name: "Damm, Sophia", class: "10R1" },
+      { name: "Dreißigacker, Briony", class: "10R1" },
+      { name: "Hammer, Amy", class: "10R1" },
+      { name: "Heine, Fynn", class: "10R1" },
+      { name: "Kaiser, Julius", class: "10R1" },
+      { name: "Kurylo, Anastasia", class: "10R1" },
+      { name: "Mahmoud, Hitham", class: "10R1" },
+      { name: "Movsesiants, Elene", class: "10R1" },
+      { name: "Nordmann, Adrian", class: "10R1" },
+      { name: "Osaj, Justus Timm", class: "10R1" },
+      { name: "Parkhomenko, Margarita", class: "10R1" },
+      { name: "Petersen, Jule Charlotte", class: "10R1" },
+      { name: "Sabsabi, Lana", class: "10R1" },
+      { name: "Thomsen, Bjarne", class: "10R1" },
+      { name: "Zworski, Moritz Finn", class: "10R1" },
+      // 10H
+      { name: "Amini, Tamim", class: "10H" },
+      { name: "Azimi, Arezo", class: "10H" },
+      { name: "Bektasevic, Maida", class: "10H" },
+      { name: "Efremidis, Alexis", class: "10H" },
+      { name: "Finger, Joyce", class: "10H" },
+      { name: "Lebjedzinski, Sophie", class: "10H" },
+      { name: "Leikind, Diana", class: "10H" },
+      { name: "Mehmedov, Mert", class: "10H" },
+      { name: "Mhafel, Adel", class: "10H" },
+      { name: "Notthoff, Nijsen", class: "10H" },
+      { name: "Notthoff, Nick", class: "10H" },
+      { name: "Özer, Kartal", class: "10H" },
+      { name: "Philipper, Niklas", class: "10H" },
+      { name: "Pörtner, Tim Niklas", class: "10H" },
+      { name: "Pollack, Kimberly", class: "10H" },
+      { name: "Teimori, Asal", class: "10H" },
+      { name: "Topper, Jannik", class: "10H" },
+      { name: "Vogel, Niklas", class: "10H" },
+      { name: "Wirsum, Maxim", class: "10H" }
     ];
 
-    for (const cls of classes) {
-      for (const studentName of cls.students) {
-        await storage.createUser({
-          username: studentName,
-          password: "1234", // Default password
-          role: "student",
-          className: cls.name
-        });
-      }
+    for (const student of students) {
+      await storage.createUser({
+        username: student.name,
+        password: "1234",
+        role: "student",
+        className: student.class
+      });
     }
     console.log("Seeding Complete.");
   }

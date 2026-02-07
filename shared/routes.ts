@@ -121,6 +121,27 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/messages/:id' as const,
+      input: z.object({
+        content: z.string().min(1),
+      }),
+      responses: {
+        200: z.custom<typeof messages.$inferSelect>(),
+        401: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/messages/:id' as const,
+      responses: {
+        204: z.void(),
+        401: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
+      },
+    },
   },
   admin: {
     reset: {
@@ -128,6 +149,25 @@ export const api = {
       path: '/api/admin/reset' as const,
       responses: {
         200: z.object({ message: z.string() }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    getSettings: {
+      method: 'GET' as const,
+      path: '/api/admin/settings' as const,
+      responses: {
+        200: z.object({ resetAt: z.string().nullable() }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    updateSettings: {
+      method: 'POST' as const,
+      path: '/api/admin/settings' as const,
+      input: z.object({
+        resetAt: z.string().nullable(),
+      }),
+      responses: {
+        200: z.object({ resetAt: z.string().nullable() }),
         401: errorSchemas.unauthorized,
       },
     }
