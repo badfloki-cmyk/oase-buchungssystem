@@ -38,7 +38,7 @@ Preferred communication style: Simple, everyday language.
   - `rooms` — id, name, teacher, capacity (default 25)
   - `bookings` — id, userId (FK→users), roomId (FK→rooms), createdAt
   - `messages` — id, content, authorName, createdAt
-  - `settings` — id, resetAt (for scheduled database resets)
+  - `settings` — id, resetDay1 (int, day of week 0-6), resetDay2 (int), resetTime (text "HH:MM"), lastResetAt (timestamp) — for weekly recurring resets on 2 days
 
 ### Storage Pattern
 - `server/storage.ts` defines an `IStorage` interface and `DatabaseStorage` implementation
