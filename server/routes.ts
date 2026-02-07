@@ -161,8 +161,9 @@ export async function registerRoutes(
       if (!s || s.resetDay1 == null || s.resetDay2 == null || !s.resetTime) return;
 
       const now = new Date();
-      const currentDay = now.getDay(); // 0=Sunday, 1=Monday, ...
-      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+      const currentDay = berlinTime.getDay(); // 0=Sunday, 1=Monday, ...
+      const currentTime = `${berlinTime.getHours().toString().padStart(2, '0')}:${berlinTime.getMinutes().toString().padStart(2, '0')}`;
 
       const isResetDay = currentDay === s.resetDay1 || currentDay === s.resetDay2;
       const isPastTime = currentTime >= s.resetTime;
@@ -170,10 +171,10 @@ export async function registerRoutes(
       if (isResetDay && isPastTime) {
         // Check if already reset today
         if (s.lastResetAt) {
-          const lastReset = new Date(s.lastResetAt);
-          const sameDay = lastReset.getFullYear() === now.getFullYear() &&
-                          lastReset.getMonth() === now.getMonth() &&
-                          lastReset.getDate() === now.getDate();
+          const lastReset = new Date(new Date(s.lastResetAt).toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+          const sameDay = lastReset.getFullYear() === berlinTime.getFullYear() &&
+                          lastReset.getMonth() === berlinTime.getMonth() &&
+                          lastReset.getDate() === berlinTime.getDate();
           if (sameDay) return; // Already reset today
         }
 
