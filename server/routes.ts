@@ -136,7 +136,7 @@ export async function registerRoutes(
   app.post(api.admin.updateSettings.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
     const { resetDay1, resetDay2, resetTime } = api.admin.updateSettings.input.parse(req.body);
-    const updated = await storage.updateSettings({ resetDay1, resetDay2, resetTime });
+    const updated = await storage.updateSettings({ resetDay1, resetDay2, resetTime, lastResetAt: null });
     res.json({
       resetDay1: updated.resetDay1 ?? null,
       resetDay2: updated.resetDay2 ?? null,
