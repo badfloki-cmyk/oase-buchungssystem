@@ -384,9 +384,10 @@ export default function AdminDashboard() {
                 onClick={() => {
                   const printWindow = window.open('', '_blank');
                   if (!printWindow || !passwords) return;
+                  const studentPasswords = passwords.filter(p => p.role !== 'admin');
                   const grouped: Record<string, typeof passwords> = {};
-                  passwords.forEach(p => {
-                    const group = p.role === 'admin' ? 'Lehrer' : p.className;
+                  studentPasswords.forEach(p => {
+                    const group = p.className;
                     if (!grouped[group]) grouped[group] = [];
                     grouped[group].push(p);
                   });
@@ -421,9 +422,10 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {passwords && (() => {
+                const studentPasswords = passwords.filter(p => p.role !== 'admin');
                 const grouped: Record<string, typeof passwords> = {};
-                passwords.forEach(p => {
-                  const group = p.role === 'admin' ? 'Lehrer' : p.className;
+                studentPasswords.forEach(p => {
+                  const group = p.className;
                   if (!grouped[group]) grouped[group] = [];
                   grouped[group].push(p);
                 });
