@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Calendar, Ticket, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
@@ -26,8 +25,7 @@ export default function Dashboard() {
       onSuccess: () => {
         toast({
           title: "Erfolgreich eingetragen!",
-          description: "Viel Spaß in der OASE.",
-          className: "bg-green-50 border-green-200 text-green-900",
+          description: "Du bist jetzt angemeldet.",
         });
       },
       onError: (err) => {
@@ -57,29 +55,24 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <Header />
       
       <main className="container mx-auto px-4 pt-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 font-display">
-            Hallo, {user?.username} 👋
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold text-foreground font-display" data-testid="text-welcome">
+            Hallo, {user?.username}
           </h2>
-          <p className="text-gray-500 mt-2">Willkommen zurück in der OASE.</p>
-        </motion.div>
+          <p className="text-muted-foreground mt-2">Willkommen bei Fit f&uuml;r den Abschluss.</p>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Main Content: Rooms */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Räume verfügbar
+                R&auml;ume verf&uuml;gbar
               </h3>
             </div>
 
@@ -97,93 +90,76 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-8">
             
-            {/* Current Booking Status */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-600 to-indigo-700 text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Ticket className="h-5 w-5" />
-                    Mein Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {myBooking ? (
-                    <div className="space-y-4 relative z-10">
-                      <div>
-                        <p className="text-blue-100 text-sm">Eingetragen in</p>
-                        <p className="text-2xl font-bold font-display">{myBooking.room.name}</p>
-                        <p className="text-blue-100 text-sm opacity-80 mt-1">
-                          bei {myBooking.room.teacher}
-                        </p>
-                      </div>
-                      <Button 
-                        onClick={handleCancel}
-                        disabled={isCanceling}
-                        variant="destructive"
-                        className="w-full bg-white/10 hover:bg-white/20 text-white border-0 shadow-none backdrop-blur-sm"
-                      >
-                        {isCanceling ? "Moment..." : "Austragen"}
-                      </Button>
+            <Card className="bg-primary text-primary-foreground overflow-hidden">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-primary-foreground">
+                  <Ticket className="h-5 w-5" />
+                  Mein Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {myBooking ? (
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-primary-foreground/70 text-sm">Eingetragen in</p>
+                      <p className="text-2xl font-bold font-display" data-testid="text-my-room">{myBooking.room.name}</p>
+                      <p className="text-primary-foreground/70 text-sm mt-1">
+                        bei {myBooking.room.teacher}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="text-center py-6 relative z-10">
-                      <div className="bg-white/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <AlertCircle className="h-6 w-6 text-blue-100" />
+                    <Button 
+                      onClick={handleCancel}
+                      disabled={isCanceling}
+                      variant="secondary"
+                      className="w-full"
+                      data-testid="button-cancel-booking"
+                    >
+                      {isCanceling ? "Moment..." : "Austragen"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <AlertCircle className="h-8 w-8 text-primary-foreground/60 mx-auto mb-3" />
+                    <p className="text-primary-foreground/80">Du bist noch nirgends eingetragen.</p>
+                    <p className="text-sm text-primary-foreground/60 mt-2">W&auml;hle einen Raum aus.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="bg-muted border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Schwarzes Brett
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {messages && messages.length > 0 ? (
+                    messages.map((msg) => (
+                      <div key={msg.id} className="p-4" data-testid={`text-message-${msg.id}`}>
+                        <p className="text-foreground font-medium">{msg.content}</p>
+                        <div className="flex justify-between items-center mt-2 flex-wrap gap-1">
+                          <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                            {msg.authorName}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(msg.createdAt!).toLocaleDateString('de-DE')}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-blue-100">Du bist noch nirgends eingetragen.</p>
-                      <p className="text-sm text-blue-200 mt-2">Wähle einen Raum aus.</p>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground text-sm">
+                      Keine Nachrichten vorhanden.
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Messages / Schwarzes Brett */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="border shadow-md bg-white">
-                <CardHeader className="bg-yellow-50 border-b border-yellow-100">
-                  <CardTitle className="flex items-center gap-2 text-yellow-800">
-                    <MessageSquare className="h-5 w-5" />
-                    Schwarzes Brett
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-gray-100">
-                    {messages && messages.length > 0 ? (
-                      messages.map((msg) => (
-                        <div key={msg.id} className="p-4 hover:bg-slate-50 transition-colors">
-                          <p className="text-gray-800 font-medium">{msg.content}</p>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                              {msg.authorName}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {new Date(msg.createdAt!).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-8 text-center text-gray-400 text-sm">
-                        Keine Nachrichten vorhanden.
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                </div>
+              </CardContent>
+            </Card>
 
           </div>
         </div>
@@ -194,19 +170,19 @@ export default function Dashboard() {
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="h-20 bg-white border-b mb-8" />
+    <div className="min-h-screen bg-background">
+      <div className="h-20 bg-card border-b mb-8" />
       <div className="container mx-auto px-4">
         <Skeleton className="h-10 w-64 mb-10" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-64 rounded-2xl" />
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-64 rounded-md" />
             ))}
           </div>
           <div className="space-y-8">
-            <Skeleton className="h-48 rounded-2xl" />
-            <Skeleton className="h-64 rounded-2xl" />
+            <Skeleton className="h-48 rounded-md" />
+            <Skeleton className="h-64 rounded-md" />
           </div>
         </div>
       </div>

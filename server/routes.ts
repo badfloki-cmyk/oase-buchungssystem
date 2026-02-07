@@ -145,6 +145,20 @@ export async function registerRoutes(
   // SEED DATA
   await seedDatabase();
 
+  // Auto-reset timer: check every 60 seconds
+  setInterval(async () => {
+    try {
+      const settings = await storage.getSettings();
+      if (settings?.resetAt && new Date(settings.resetAt) <= new Date()) {
+        console.log("Auto-reset triggered at", new Date().toISOString());
+        await storage.resetBookings();
+        await storage.updateSettings(null);
+      }
+    } catch (err) {
+      console.error("Auto-reset check failed:", err);
+    }
+  }, 60000);
+
   return httpServer;
 }
 

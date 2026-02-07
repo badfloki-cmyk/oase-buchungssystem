@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useAuth, useUsers } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, ShieldCheck, ArrowRight } from "lucide-react";
 import logoImg from "@assets/Design_ohne_Titel_1770456051759.png";
-import { motion } from "framer-motion";
 
 export default function Login() {
   const { login, isLoggingIn, loginError } = useAuth();
@@ -23,8 +22,6 @@ export default function Login() {
   const handleStudentLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentId) return;
-    
-    // Find username from ID
     const user = users?.find(u => u.id.toString() === studentId);
     if (user) {
       login({ username: user.username, password: studentPass });
@@ -36,33 +33,31 @@ export default function Login() {
     login({ username: adminUser, password: adminPass });
   };
 
-  const students = users?.filter(u => u.role === "student") || [];
+  const students = (users?.filter(u => u.role === "student") || []).sort((a, b) => a.username.localeCompare(b.username, 'de'));
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 shadow-xl border-4 border-white flex items-center justify-center overflow-hidden">
-             <img src={logoImg} alt="Logo" className="w-full h-full object-cover" />
-          </div>
-          <h1 className="text-4xl font-bold text-blue-900 font-display mb-2">OASE</h1>
-          <p className="text-blue-600/80 font-medium tracking-wide uppercase text-sm">Buchungssystem</p>
+          <img 
+            src={logoImg} 
+            alt="Ernst-Reuter-Schule Logo" 
+            data-testid="img-login-logo"
+            className="h-16 mx-auto mb-4 object-contain"
+          />
+          <h1 className="text-3xl font-bold text-foreground font-display mb-1">Fit f&uuml;r den Abschluss</h1>
+          <p className="text-muted-foreground text-sm">Raum-Buchungssystem</p>
         </div>
 
-        <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-lg overflow-hidden">
+        <Card className="border shadow-lg overflow-hidden">
           <Tabs defaultValue="student" className="w-full">
-            <div className="bg-slate-50 border-b p-2">
+            <div className="bg-muted border-b p-2">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="student" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="student" data-testid="tab-student">
                   <GraduationCap className="w-4 h-4 mr-2" />
-                  Schüler
+                  Sch&uuml;ler
                 </TabsTrigger>
-                <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="admin" data-testid="tab-admin">
                   <ShieldCheck className="w-4 h-4 mr-2" />
                   Lehrer
                 </TabsTrigger>
@@ -71,27 +66,23 @@ export default function Login() {
 
             <CardContent className="p-8">
               {loginError && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-6 border border-red-100"
-                >
+                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-6 border border-destructive/20" data-testid="text-login-error">
                   {loginError.message}
-                </motion.div>
+                </div>
               )}
 
               <TabsContent value="student" className="mt-0">
                 <form onSubmit={handleStudentLogin} className="space-y-6">
                   <div className="space-y-2">
-                    <Label>Name auswählen</Label>
+                    <Label>Name ausw&auml;hlen</Label>
                     <Select onValueChange={setStudentId} value={studentId}>
-                      <SelectTrigger className="bg-white h-11 border-slate-200">
-                        <SelectValue placeholder="Wähle deinen Namen..." />
+                      <SelectTrigger data-testid="select-student-name">
+                        <SelectValue placeholder="W&auml;hle deinen Namen..." />
                       </SelectTrigger>
                       <SelectContent>
                         {students.map((u) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.username} <span className="text-slate-400 ml-2 text-xs">({u.className})</span>
+                          <SelectItem key={u.id} value={u.id.toString()} data-testid={`select-student-${u.id}`}>
+                            {u.username} ({u.className})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -101,16 +92,17 @@ export default function Login() {
                     <Label>Passwort</Label>
                     <Input 
                       type="password" 
-                      placeholder="••••••" 
+                      placeholder="Passwort eingeben" 
                       value={studentPass}
                       onChange={(e) => setStudentPass(e.target.value)}
-                      className="bg-white h-11 border-slate-200"
+                      data-testid="input-student-password"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-11 text-base font-bold bg-primary hover:bg-blue-600 shadow-lg shadow-blue-500/20"
+                    className="w-full"
                     disabled={isLoggingIn || !studentId || !studentPass}
+                    data-testid="button-student-login"
                   >
                     {isLoggingIn ? "Anmelden..." : "Los geht's"}
                     {!isLoggingIn && <ArrowRight className="ml-2 w-4 h-4" />}
@@ -123,28 +115,29 @@ export default function Login() {
                   <div className="space-y-2">
                     <Label>Benutzername</Label>
                     <Input 
-                      placeholder="admin" 
+                      placeholder="Benutzername" 
                       value={adminUser}
                       onChange={(e) => setAdminUser(e.target.value)}
-                      className="bg-white h-11 border-slate-200"
+                      data-testid="input-admin-username"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Passwort</Label>
                     <Input 
                       type="password" 
-                      placeholder="••••••" 
+                      placeholder="Passwort eingeben" 
                       value={adminPass}
                       onChange={(e) => setAdminPass(e.target.value)}
-                      className="bg-white h-11 border-slate-200"
+                      data-testid="input-admin-password"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-11 text-base font-bold bg-slate-800 hover:bg-slate-900 shadow-lg shadow-slate-900/20"
+                    className="w-full"
                     disabled={isLoggingIn || !adminUser || !adminPass}
+                    data-testid="button-admin-login"
                   >
-                    {isLoggingIn ? "Überprüfe..." : "Dashboard öffnen"}
+                    {isLoggingIn ? "&Uuml;berpr&uuml;fe..." : "Dashboard &ouml;ffnen"}
                   </Button>
                 </form>
               </TabsContent>
@@ -152,10 +145,10 @@ export default function Login() {
           </Tabs>
         </Card>
         
-        <p className="text-center text-blue-800/40 text-sm mt-8 font-medium">
-          © 2024 Schule am OASE Park
+        <p className="text-center text-muted-foreground/60 text-sm mt-8 font-medium">
+          Ernst-Reuter-Schule Pattensen
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

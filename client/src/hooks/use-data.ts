@@ -1,19 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 
-// === ROOMS ===
 export function useRooms() {
   return useQuery({
     queryKey: [api.rooms.list.path],
     queryFn: async () => {
       const res = await fetch(api.rooms.list.path);
-      if (!res.ok) throw new Error("Fehler beim Laden der Räume");
+      if (!res.ok) throw new Error("Fehler beim Laden der Raeume");
       return api.rooms.list.responses[200].parse(await res.json());
     },
   });
 }
 
-// === BOOKINGS ===
 export function useBookings() {
   return useQuery({
     queryKey: [api.bookings.list.path],
@@ -52,10 +50,8 @@ export function useDeleteBooking() {
   return useMutation({
     mutationFn: async (id: number) => {
       const url = buildUrl(api.bookings.delete.path, { id });
-      const res = await fetch(url, {
-        method: api.bookings.delete.method,
-      });
-      if (!res.ok) throw new Error("Löschen fehlgeschlagen");
+      const res = await fetch(url, { method: api.bookings.delete.method });
+      if (!res.ok) throw new Error("Loeschen fehlgeschlagen");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.bookings.list.path] });
@@ -64,7 +60,6 @@ export function useDeleteBooking() {
   });
 }
 
-// === MESSAGES ===
 export function useMessages() {
   return useQuery({
     queryKey: [api.messages.list.path],
@@ -94,7 +89,39 @@ export function useCreateMessage() {
   });
 }
 
-// === ADMIN ===
+export function useUpdateMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, content }: { id: number; content: string }) => {
+      const url = buildUrl(api.messages.update.path, { id });
+      const res = await fetch(url, {
+        method: api.messages.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) throw new Error("Nachricht konnte nicht bearbeitet werden");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.messages.list.path] });
+    },
+  });
+}
+
+export function useDeleteMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.messages.delete.path, { id });
+      const res = await fetch(url, { method: api.messages.delete.method });
+      if (!res.ok) throw new Error("Nachricht konnte nicht geloescht werden");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.messages.list.path] });
+    },
+  });
+}
+
 export function useResetDatabase() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -107,6 +134,35 @@ export function useResetDatabase() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
+    },
+  });
+}
+
+export function useSettings() {
+  return useQuery({
+    queryKey: [api.admin.getSettings.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.getSettings.path);
+      if (!res.ok) throw new Error("Einstellungen konnten nicht geladen werden");
+      return res.json();
+    },
+  });
+}
+
+export function useUpdateSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (resetAt: string | null) => {
+      const res = await fetch(api.admin.updateSettings.path, {
+        method: api.admin.updateSettings.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resetAt }),
+      });
+      if (!res.ok) throw new Error("Einstellungen konnten nicht gespeichert werden");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.getSettings.path] });
     },
   });
 }

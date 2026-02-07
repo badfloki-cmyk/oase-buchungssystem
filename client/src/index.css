@@ -8,38 +8,73 @@
   --font-display: 'Fredoka', sans-serif;
   --font-body: 'Nunito', sans-serif;
 
-  /* Fresh, Clean Blue Palette for School Environment */
-  --background: 210 50% 98%;
-  --foreground: 222 47% 11%;
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 340 30% 97%;
+  --foreground: 340 30% 10%;
 
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 340 30% 10%;
+  --card-border: 340 10% 90%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 340 30% 10%;
+  --popover-border: 340 10% 90%;
 
-  /* Primary Blue - Friendly yet professional */
-  --primary: 204 88% 53%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 336 100% 45%;
+  --primary-foreground: 0 0% 100%;
 
-  /* Soft Blue Secondary */
-  --secondary: 204 88% 96%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary: 336 40% 95%;
+  --secondary-foreground: 336 60% 30%;
 
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  --muted: 340 20% 95%;
+  --muted-foreground: 340 10% 45%;
 
-  --accent: 262 83% 58%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 336 80% 92%;
+  --accent-foreground: 336 100% 35%;
 
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 204 88% 53%;
+  --border: 340 15% 90%;
+  --input: 340 15% 88%;
+  --ring: 336 100% 45%;
 
-  --radius: 1rem;
+  --sidebar: 336 20% 97%;
+  --sidebar-foreground: 340 30% 10%;
+  --sidebar-border: 340 10% 90%;
+  --sidebar-primary: 336 100% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 336 40% 93%;
+  --sidebar-accent-foreground: 336 100% 35%;
+  --sidebar-ring: 336 100% 45%;
+
+  --chart-1: 336 100% 45%;
+  --chart-2: 262 83% 58%;
+  --chart-3: 25 95% 53%;
+  --chart-4: 173 58% 39%;
+  --chart-5: 43 74% 66%;
+
+  --radius: 0.5rem;
+
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
 @layer base {
@@ -49,8 +84,8 @@
   body {
     @apply bg-background text-foreground antialiased font-body;
     background-image: 
-      radial-gradient(at 0% 0%, hsla(204, 88%, 93%, 1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(262, 83%, 96%, 1) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(336, 80%, 94%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(336, 40%, 96%, 1) 0px, transparent 50%);
     background-attachment: fixed;
   }
   
@@ -59,10 +94,72 @@
   }
 }
 
-.glass-card {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
-}
+@layer utilities {
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
 
-.hover-lift {
-  @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  .no-default-hover-elevate {}
+  .no-default-active-elevate {}
+
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: -1;
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: 999;
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
+    inset: -1px;
+  }
 }
