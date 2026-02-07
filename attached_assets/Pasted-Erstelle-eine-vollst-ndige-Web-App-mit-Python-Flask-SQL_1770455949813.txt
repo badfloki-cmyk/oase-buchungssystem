@@ -1,0 +1,159 @@
+Erstelle eine vollständige Web-App mit Python (Flask), SQLite-Datenbank und TailwindCSS-Frontend, die ein Raum-Buchungssystem für Schüler:innen realisiert.
+
+Titel: "OASE Buchungssystem"
+
+---
+
+### 🎯 ZIEL
+Ein digitales System, in dem Schüler:innen sich mit **Name + Passwort** einloggen, einen Raum (Mathe, Deutsch, Englisch) auswählen und sich dort eintragen können.  
+Lehrer:innen können über ein Dashboard Buchungen verwalten, Nachrichten posten und die Datenbank wöchentlich zurücksetzen.
+
+---
+
+### 🧠 TECHNISCHE BASIS
+- Backend: **Python Flask**
+- Datenbank: **SQLite**
+- Frontend: **HTML + TailwindCSS + Jinja2**
+- Passwort-Hashing: **werkzeug.security**
+- Cron/Timer für Reset: **apscheduler**
+- Session-Login-System mit `flask_login`
+
+---
+
+### 📊 DATENBANK-STRUKTUR
+
+**students**
+- id (int, primary key)
+- name (string)
+- class (string)
+- password_hash (string)
+- special_notes (string, optional)
+
+**rooms**
+- id (int, primary key)
+- name (string) → ["Mathe", "Deutsch", "Englisch"]
+- teacher (string)
+- capacity (int = 25)
+
+**bookings**
+- id (int, primary key)
+- student_id (foreign key)
+- room_id (foreign key)
+- booking_date (datetime)
+
+**messages**
+- id (int, primary key)
+- teacher (string)
+- content (text)
+- timestamp (datetime)
+
+**settings**
+- id (int, primary key)
+- reset_datetime (datetime)
+
+---
+
+### 🔑 LOGIN-SYSTEM
+
+#### Schüler:innen
+- Auf der Login-Seite gibt es ein **Drop-down-Menü mit allen Schülernamen** (alphabetisch sortiert)
+- Daneben ein Passwortfeld
+- Login prüft Hash in der Datenbank
+- Nach erfolgreichem Login landet der Schüler auf seinem **Dashboard**
+
+#### Lehrer:innen (Admin)
+- Separate Login-Seite unter `/admin`
+- Zugang über Benutzername `admin` + Passwort aus `.env`-Variable `ADMIN_PASS`
+
+---
+
+### 🧭 SCHÜLER-DASHBOARD
+
+Nach Login sieht der Schüler:
+- Willkommenstext: „Hallo [Name] 👋“
+- Aktuelle Buchung (wenn vorhanden)
+- Auswahlfeld für Räume (Mathe / Deutsch / Englisch)
+- Button „Eintragen“ (nur möglich, wenn Platz frei ist)
+- Möglichkeit, eigene Buchung zu löschen („Austragen“)
+- Anzeige der letzten Nachrichten vom Schwarzen Brett
+- Countdown bis zum nächsten Datenbank-Reset („Nächste Eintragungsphase beginnt in ...“)
+
+Validierung:
+- Schüler kann sich nur in **1 Raum gleichzeitig** eintragen
+- Wenn Raum voll → Fehlermeldung
+- Alle Einträge sind datumsgebunden (z. B. 2x pro Woche)
+
+---
+
+### 🧰 LEHRER-DASHBOARD
+
+Route: `/admin/dashboard`
+
+Funktionen:
+- Übersicht über alle Buchungen (nach Raum sortiert)
+- Buttons:
+  - „Austragen“ (Schüler aus Raum entfernen)
+  - „Verschieben“ (Schüler in anderen Raum)
+  - „Reset planen“ (Datum + Uhrzeit auswählen)
+  - „Jetzt zurücksetzen“ (manueller Datenbank-Reset)
+- Nachrichtenfeld („Schwarzes Brett“):
+  - Lehrkraft kann Mitteilung schreiben
+  - Schüler sehen diese automatisch im Dashboard
+- Exportfunktion (CSV / Excel) aller aktuellen Buchungen
+
+---
+
+### ⏱ AUTOMATISCHER RESET
+- Die App löscht alle Einträge in `bookings`, sobald das geplante Reset-Datum erreicht ist
+- Implementiert mit `apscheduler`
+- Schüler können danach wieder neu buchen
+
+---
+
+### 📱 FRONTEND
+- Responsives Design mit TailwindCSS
+- Ruhige Schulfarben (Hellblau / Weiß)
+- Übersichtliches UI:
+  - Räume mit Balken für freie Plätze (z. B. 13/25)
+  - Nachrichtenbereich mit Datum + Autor
+  - Buttons mit Icons (Löschen, Verschieben, Speichern)
+- Lehrer-Dashboard mit Tabellenansicht
+
+---
+
+### 🔐 SICHERHEIT
+- Passwörter werden **gehasht** (bcrypt oder werkzeug)
+- Nur eingeloggte Benutzer dürfen Dashboard aufrufen
+- Admin-Funktionen durch `@login_required` + Admin-Rolle geschützt
+- Kein direkter Datenbankzugriff über Frontend
+
+---
+
+### 🧍 SCHÜLERLISTE (inkl. Passwörter beim Setup)
+Beim ersten Start soll ein **Setup-Skript** (`setup_db.py`) automatisch:
+- Alle Schüler mit Namen, Klasse und Dummy-Passwort („1234“) anlegen
+- Die Passwörter gehasht speichern
+- Lehrer + Räume eintragen:
+  - Mathe → Haenicke
+  - Deutsch → Hofer
+  - Englisch → Wischinski
+- Schülernamen aus den Klassen:
+  - 10H (Langlott/Benke)
+  - 10R1 (Tewes/Bähne)
+  - 10R2 (Haenicke/Hofer)
+
+---
+
+### 💬 EXTRA FEATURES (optional)
+- Schüler können Lehrer-Kommentare zu Nachrichten liken 👍
+- Benachrichtigungen bei Raumänderungen („Dein Raum wurde geändert!“)
+- Statistikseite für Lehrer:
+  - Raum-Auslastung (%)
+  - Häufigste Bucher
+- Passwort ändern (über Schüler-Dashboard)
+- Dunkelmodus 🌙
+
+---
+
+### ⚙️ TECHNISCHE ANFORDERUNGEN
+- Datei-Struktur:
