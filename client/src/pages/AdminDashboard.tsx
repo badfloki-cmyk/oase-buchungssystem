@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useBookings, useDeleteBooking, useMessages, useCreateMessage, useUpdateMessage, useDeleteMessage, useResetDatabase, useSettings, useUpdateSettings } from "@/hooks/use-data";
+import { useBookings, useDeleteBooking, useMessages, useCreateMessage, useUpdateMessage, useDeleteMessage, useResetDatabase, useSettings, useUpdateSettings, usePasswords } from "@/hooks/use-data";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Send, RefreshCw, Users, Pencil, Clock, CalendarDays, Check } from "lucide-react";
+import { Trash2, Send, RefreshCw, Users, Pencil, Clock, CalendarDays, Check, KeyRound, Printer } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const { mutate: resetDb, isPending: isResetting } = useResetDatabase();
   const { data: settings } = useSettings();
   const { mutate: updateSettings, isPending: isSavingSettings } = useUpdateSettings();
+  const { data: passwords } = usePasswords();
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -366,6 +367,93 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
+        </div>
+
+        <div className="mt-8">
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-muted border-b flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <KeyRound className="h-5 w-5 text-primary" />
+                  Passwortliste
+                </CardTitle>
+                <CardDescription>Alle Zugangsdaten</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const printWindow = window.open('', '_blank');
+                  if (!printWindow || !passwords) return;
+                  const grouped: Record<string, typeof passwords> = {};
+                  passwords.forEach(p => {
+                    const group = p.role === 'admin' ? 'Lehrer' : p.className;
+                    if (!grouped[group]) grouped[group] = [];
+                    grouped[group].push(p);
+                  });
+                  const sortedGroups = Object.keys(grouped).sort();
+                  let html = `<html><head><title>Passwortliste</title><style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { font-size: 18px; margin-bottom: 20px; }
+                    h2 { font-size: 14px; margin: 16px 0 8px; background: #f0f0f0; padding: 4px 8px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+                    th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; font-size: 12px; }
+                    th { background: #f5f5f5; font-weight: bold; }
+                    @media print { body { padding: 0; } }
+                  </style></head><body>`;
+                  html += '<h1>Fit f\u00fcr den Abschluss - Passwortliste</h1>';
+                  sortedGroups.forEach(group => {
+                    html += `<h2>${group}</h2><table><tr><th>Name</th><th>Passwort</th></tr>`;
+                    grouped[group].sort((a, b) => a.username.localeCompare(b.username, 'de')).forEach(p => {
+                      html += `<tr><td>${p.username}</td><td style="font-family:monospace">${p.password}</td></tr>`;
+                    });
+                    html += '</table>';
+                  });
+                  html += '</body></html>';
+                  printWindow.document.write(html);
+                  printWindow.document.close();
+                  printWindow.print();
+                }}
+                data-testid="button-print-passwords"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Drucken
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {passwords && (() => {
+                const grouped: Record<string, typeof passwords> = {};
+                passwords.forEach(p => {
+                  const group = p.role === 'admin' ? 'Lehrer' : p.className;
+                  if (!grouped[group]) grouped[group] = [];
+                  grouped[group].push(p);
+                });
+                const sortedGroups = Object.keys(grouped).sort();
+                return sortedGroups.map(group => (
+                  <div key={group}>
+                    <div className="px-4 py-2 bg-muted/50 border-b font-medium text-sm text-foreground" data-testid={`text-password-group-${group}`}>
+                      {group} ({grouped[group].length})
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Passwort</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {grouped[group].sort((a, b) => a.username.localeCompare(b.username, 'de')).map((p) => (
+                          <TableRow key={p.username} data-testid={`row-password-${p.username}`}>
+                            <TableCell className="font-medium">{p.username}</TableCell>
+                            <TableCell className="font-mono text-sm">{p.password}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ));
+              })()}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

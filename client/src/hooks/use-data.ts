@@ -152,6 +152,17 @@ export function useSettings() {
   });
 }
 
+export function usePasswords() {
+  return useQuery({
+    queryKey: [api.admin.passwords.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.passwords.path);
+      if (!res.ok) throw new Error("Passwörter konnten nicht geladen werden");
+      return res.json() as Promise<{ username: string; password: string; role: string; className: string }[]>;
+    },
+  });
+}
+
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({

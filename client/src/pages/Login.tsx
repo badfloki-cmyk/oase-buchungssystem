@@ -16,7 +16,7 @@ export default function Login() {
   const [studentId, setStudentId] = useState("");
   const [studentPass, setStudentPass] = useState("");
   
-  const [adminUser, setAdminUser] = useState("");
+  const [adminId, setAdminId] = useState("");
   const [adminPass, setAdminPass] = useState("");
 
   const handleStudentLogin = (e: React.FormEvent) => {
@@ -30,10 +30,15 @@ export default function Login() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    login({ username: adminUser, password: adminPass });
+    if (!adminId) return;
+    const user = users?.find(u => u.id.toString() === adminId);
+    if (user) {
+      login({ username: user.username, password: adminPass });
+    }
   };
 
   const students = (users?.filter(u => u.role === "student") || []).sort((a, b) => a.username.localeCompare(b.username, 'de'));
+  const admins = (users?.filter(u => u.role === "admin") || []).sort((a, b) => a.username.localeCompare(b.username, 'de'));
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -113,13 +118,19 @@ export default function Login() {
               <TabsContent value="admin" className="mt-0">
                 <form onSubmit={handleAdminLogin} className="space-y-6">
                   <div className="space-y-2">
-                    <Label>Benutzername</Label>
-                    <Input 
-                      placeholder="Benutzername" 
-                      value={adminUser}
-                      onChange={(e) => setAdminUser(e.target.value)}
-                      data-testid="input-admin-username"
-                    />
+                    <Label>Name ausw&auml;hlen</Label>
+                    <Select onValueChange={setAdminId} value={adminId}>
+                      <SelectTrigger data-testid="select-admin-name">
+                        <SelectValue placeholder="W&auml;hle deinen Namen..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {admins.map((u) => (
+                          <SelectItem key={u.id} value={u.id.toString()} data-testid={`select-admin-${u.id}`}>
+                            {u.username}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Passwort</Label>
@@ -134,7 +145,7 @@ export default function Login() {
                   <Button 
                     type="submit" 
                     className="w-full"
-                    disabled={isLoggingIn || !adminUser || !adminPass}
+                    disabled={isLoggingIn || !adminId || !adminPass}
                     data-testid="button-admin-login"
                   >
                     {isLoggingIn ? "&Uuml;berpr&uuml;fe..." : "Dashboard &ouml;ffnen"}

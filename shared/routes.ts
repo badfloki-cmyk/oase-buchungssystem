@@ -182,7 +182,20 @@ export const api = {
         }),
         401: errorSchemas.unauthorized,
       },
-    }
+    },
+    passwords: {
+      method: 'GET' as const,
+      path: '/api/admin/passwords' as const,
+      responses: {
+        200: z.array(z.object({
+          username: z.string(),
+          password: z.string(),
+          role: z.string(),
+          className: z.string(),
+        })),
+        401: errorSchemas.unauthorized,
+      },
+    },
   }
 };
 
