@@ -1,46 +1,29 @@
-import app, { initPromise } from "../server/api-handler";
-
-// Attach catch immediately so Node.js doesn't crash on unhandled rejection
-initPromise.catch((err) => {
-  console.error("GLOBAL INIT PROMISE REJECTION:", err);
-});
-
-// Diagnostic route for testing connection
-app.get("/api/health", async (req: any, res: any) => {
-  try {
-    await initPromise;
-    const { db } = await import("../server/db");
-    const { users } = await import("../shared/schema");
-    // Simple query to test DB
-    await db.select().from(users).limit(1);
-    res.json({ status: "ok", db: "connected", env: process.env.NODE_ENV });
-  } catch (err: any) {
-    console.error("Health check failed:", err);
-    res.status(500).json({
-      status: "error",
-      message: err?.message ?? String(err),
-      db_url_present: !!process.env.DATABASE_URL
-    });
-  }
-});
+// ULTRA-ROBUST Vercel entry point.
+// Uses dynamic imports to catch EVERY possible error during module evaluation.
 
 export default async function handler(req: any, res: any) {
   try {
+    // 1. Dynamic import of the main app and initialization logic
+    const { default: app, initPromise } = await import("../server/api-handler");
+
+    // 2. Wait for initialization (DB connections, routes, etc.)
     await initPromise;
+
+    // 3. Delegate to the Express app
+    return app(req, res);
   } catch (err: any) {
-    console.error("Vercel Init failed!");
-    console.error("Error name:", err?.name);
-    console.error("Error message:", err?.message);
-    if (err?.stack) {
-      console.error("Stack trace:", err.stack);
-    }
+    // CATCH ALL: If anything fails (import, init, or execution), return a clean 500.
+    console.error("CRITICAL BOOTSTRAP FAILURE:", err);
+    console.error("Error Name:", err?.name);
+    console.error("Error Message:", err?.message);
+    if (err?.stack) console.error("Stack Trace:", err.stack);
+
     res.status(500).json({
-      error: "Initialization failed",
+      error: "Serverless function execution failed during bootstrap",
       message: err?.message ?? String(err),
-      stack: err?.stack,
-      db_url_present: !!process.env.DATABASE_URL
+      db_url_present: !!process.env.DATABASE_URL,
+      node_env: process.env.NODE_ENV,
+      stack: err?.stack
     });
-    return;
   }
-  app(req, res);
 }
