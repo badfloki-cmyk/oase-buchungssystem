@@ -1,13 +1,6 @@
-// ULTRA-ROBUST Vercel entry point with static imports for better bundling.
-// Deployment trigger: 2026-03-12T16:08
 import app, { initPromise } from "../server/api-handler.js";
 
 export default async function handler(req: any, res: any) {
-  // Direct ping for deployment verification
-  if (req.url === "/api/ping") {
-    return res.json({ status: "alive", time: new Date().toISOString() });
-  }
-
   try {
     // Wait for initialization (DB connections, routes, etc.)
     await initPromise;

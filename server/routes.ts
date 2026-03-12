@@ -12,41 +12,6 @@ export async function registerRoutes(
   // Setup Authentication
   setupAuth(app);
 
-  // === DIAGNOSTICS ===
-  app.get("/api/health", async (_req, res) => {
-    try {
-      const { neon } = await import("@neondatabase/serverless");
-      const dbUrl = process.env.DATABASE_URL!;
-      const sqlClient = neon(dbUrl);
-
-      let taggedTemplateResult = "Not tested";
-      try {
-        const result = await sqlClient`SELECT 1 as res`;
-        taggedTemplateResult = `Success: ${JSON.stringify(result)}`;
-      } catch (e: any) {
-        taggedTemplateResult = `Failed: ${e.message}`;
-      }
-
-      const { db } = await import("./db.js");
-      const { users } = await import("../shared/schema.js");
-      await db.select().from(users).limit(1);
-
-      res.json({
-        status: "ok",
-        message: "Database connected",
-        tagged_template_test: taggedTemplateResult,
-        env: process.env.NODE_ENV
-      });
-    } catch (err: any) {
-      console.error("Health check failed:", err);
-      res.status(500).json({
-        status: "error",
-        message: err?.message ?? String(err),
-        db_url_present: !!process.env.DATABASE_URL
-      });
-    }
-  });
-
   // === API ROUTES ===
 
   // Users List (for Dropdown)
