@@ -15,10 +15,28 @@ export async function registerRoutes(
   // === DIAGNOSTICS ===
   app.get("/api/health", async (_req, res) => {
     try {
+      const { neon } = await import("@neondatabase/serverless");
+      const dbUrl = process.env.DATABASE_URL!;
+      const sqlClient = neon(dbUrl);
+
+      let taggedTemplateResult = "Not tested";
+      try {
+        const result = await sqlClient`SELECT 1 as res`;
+        taggedTemplateResult = `Success: ${JSON.stringify(result)}`;
+      } catch (e: any) {
+        taggedTemplateResult = `Failed: ${e.message}`;
+      }
+
       const { db } = await import("./db.js");
       const { users } = await import("../shared/schema.js");
       await db.select().from(users).limit(1);
-      res.json({ status: "ok", message: "Database connected", env: process.env.NODE_ENV });
+
+      res.json({
+        status: "ok",
+        message: "Database connected",
+        tagged_template_test: taggedTemplateResult,
+        env: process.env.NODE_ENV
+      });
     } catch (err: any) {
       console.error("Health check failed:", err);
       res.status(500).json({
