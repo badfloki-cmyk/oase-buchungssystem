@@ -10,8 +10,3 @@ if (!process.env.DATABASE_URL) {
 
 const sql = neon(process.env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
-
-// pool is kept for backward compat with session store (used only locally)
-import pg from "pg";
-const { Pool } = pg;
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
