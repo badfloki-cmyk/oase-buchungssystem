@@ -163,8 +163,8 @@ export async function registerRoutes(
     res.json({ message: "Alle Buchungen wurden zurückgesetzt." });
   });
 
-  // SEED DATA
-  await seedDatabase();
+  // SEED DATA — fire-and-forget so it never blocks or times out init
+  seedDatabase().catch(err => console.warn("Seed check skipped:", err));
 
   // Auto-reset timer: check every 60 seconds for weekly recurring resets
   // Disabled on Vercel (serverless functions don't support long-running timers)
