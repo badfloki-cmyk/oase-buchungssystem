@@ -41,10 +41,10 @@ export async function registerRoutes(
   // Create Booking
   app.post(api.bookings.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const { roomId } = api.bookings.create.input.parse(req.body);
-      
+
       // Validation: User already booked?
       const existingBooking = await storage.getBookingByUserId(req.user.id);
       if (existingBooking) {
@@ -54,7 +54,7 @@ export async function registerRoutes(
       // Validation: Room full?
       const room = await storage.getRoom(roomId);
       if (!room) return res.status(404).json({ message: "Raum nicht gefunden." });
-      
+
       const occupancy = await storage.getRoomOccupancy(roomId);
       if (occupancy >= room.capacity) {
         return res.status(400).json({ message: "Dieser Raum ist leider schon voll." });
@@ -67,7 +67,7 @@ export async function registerRoutes(
       res.status(201).json(booking);
     } catch (err) {
       if (err instanceof z.ZodError) {
-         return res.status(400).json({ message: err.errors[0].message });
+        return res.status(400).json({ message: err.errors[0].message });
       }
       res.status(500).json({ message: "Internal Server Error" });
     }
@@ -77,7 +77,7 @@ export async function registerRoutes(
   app.delete(api.bookings.delete.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const bookingId = parseInt(req.params.id);
-    
+
     // Check ownership or admin
     const booking = await storage.getBookings().then(bs => bs.find(b => b.id === bookingId));
     if (!booking) return res.sendStatus(404);
@@ -164,7 +164,13 @@ export async function registerRoutes(
   });
 
   // SEED DATA — fire-and-forget so it never blocks or times out init
-  seedDatabase().catch(err => console.warn("Seed check skipped:", err));
+  console.log("Checking if database seeding is needed...");
+  seedDatabase()
+    .then(() => console.log("Seed check completed successfully."))
+    .catch(err => {
+      console.warn("Seed check skipped or failed:", err?.message || err);
+      // We don't throw here to avoid crashing the serverless function during init
+    });
 
   // Auto-reset timer: check every 60 seconds for weekly recurring resets
   // Disabled on Vercel (serverless functions don't support long-running timers)
@@ -188,8 +194,8 @@ export async function registerRoutes(
         if (s.lastResetAt) {
           const lastReset = new Date(new Date(s.lastResetAt).toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
           const sameDay = lastReset.getFullYear() === berlinTime.getFullYear() &&
-                          lastReset.getMonth() === berlinTime.getMonth() &&
-                          lastReset.getDate() === berlinTime.getDate();
+            lastReset.getMonth() === berlinTime.getMonth() &&
+            lastReset.getDate() === berlinTime.getDate();
           if (sameDay) return; // Already reset today
         }
 
@@ -208,7 +214,7 @@ export async function registerRoutes(
 async function seedDatabase() {
   const users = await storage.getAllUsers();
   const existingRooms = await storage.getRooms();
-  
+
   if (existingRooms.length === 0) {
     console.log("Seeding Rooms...");
     await storage.createRoom({ name: "Mathe", teacher: "Haenicke", capacity: 25 });
