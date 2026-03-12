@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "../shared/schema";
+import * as schema from "../shared/schema.js";
 
 // We use a lazy initialization pattern to avoid top-level throws 
 // that can crash serverless functions during module evaluation.

@@ -1,5 +1,5 @@
 // ULTRA-ROBUST Vercel entry point with static imports for better bundling.
-import app, { initPromise } from "../server/api-handler";
+import app, { initPromise } from "../server/api-handler.js";
 
 export default async function handler(req: any, res: any) {
   try {

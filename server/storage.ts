@@ -1,5 +1,5 @@
-import { db } from "./db";
-import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "../shared/schema";
+import { db } from "./db.js";
+import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "../shared/schema.js";
 import { eq, count } from "drizzle-orm";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -94,7 +94,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(bookings.userId, users.id))
       .innerJoin(rooms, eq(bookings.roomId, rooms.id));
 
-    return rows.map(row => ({
+    return rows.map((row: any) => ({
       ...row.bookings,
       user: row.users,
       room: row.rooms

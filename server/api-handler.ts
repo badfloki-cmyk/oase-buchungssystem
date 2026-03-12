@@ -1,7 +1,7 @@
 // Production-only entry point for Vercel serverless functions.
 // Does NOT import server/vite.ts or server/static.ts (dev-only dependencies).
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes.js";
 import { createServer } from "http";
 
 export function log(message: string, source = "express") {
