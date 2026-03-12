@@ -1,5 +1,5 @@
 import { db, pool } from "./db";
-import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "@shared/schema";
+import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "../shared/schema";
 import { eq, count, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
