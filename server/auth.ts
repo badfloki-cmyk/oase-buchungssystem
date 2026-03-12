@@ -7,6 +7,12 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
+declare global {
+  namespace Express {
+    interface User extends SelectUser {}
+  }
+}
+
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {

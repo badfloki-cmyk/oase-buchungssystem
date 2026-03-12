@@ -1,5 +1,5 @@
 import { db, pool } from "./db";
-import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "@shared/schema";
+import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "@shared/schema";
 import { eq, count, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -17,7 +17,7 @@ export interface IStorage {
   // Rooms
   getRooms(): Promise<Room[]>;
   getRoom(id: number): Promise<Room | undefined>;
-  createRoom(room: Room): Promise<Room>;
+  createRoom(room: InsertRoom): Promise<Room>;
 
   // Bookings
   getBookings(): Promise<(Booking & { user: User, room: Room })[]>;
@@ -77,7 +77,7 @@ export class DatabaseStorage implements IStorage {
     return room;
   }
 
-  async createRoom(room: Room): Promise<Room> {
+  async createRoom(room: InsertRoom): Promise<Room> {
      const [newRoom] = await db.insert(rooms).values(room).returning();
      return newRoom;
   }
