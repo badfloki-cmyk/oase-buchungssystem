@@ -47,13 +47,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (err) {
+      console.error(`Database error in getUser(${id}):`, err);
+      throw err;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (err) {
+      console.error(`Database error in getUserByUsername(${username}):`, err);
+      throw err;
+    }
   }
 
   async createUser(user: InsertUser): Promise<User> {
@@ -75,15 +85,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoom(room: InsertRoom): Promise<Room> {
-     const [newRoom] = await db.insert(rooms).values(room).returning();
-     return newRoom;
+    const [newRoom] = await db.insert(rooms).values(room).returning();
+    return newRoom;
   }
 
   async getBookings(): Promise<(Booking & { user: User, room: Room })[]> {
     const rows = await db.select().from(bookings)
       .innerJoin(users, eq(bookings.userId, users.id))
       .innerJoin(rooms, eq(bookings.roomId, rooms.id));
-    
+
     return rows.map(row => ({
       ...row.bookings,
       user: row.users,
