@@ -167,6 +167,9 @@ export async function registerRoutes(
   await seedDatabase();
 
   // Auto-reset timer: check every 60 seconds for weekly recurring resets
+  // Disabled on Vercel (serverless functions don't support long-running timers)
+  // Configure a Vercel Cron Job pointing to /api/cron/reset instead
+  if (process.env.VERCEL) return httpServer;
   setInterval(async () => {
     try {
       const s = await storage.getSettings();
