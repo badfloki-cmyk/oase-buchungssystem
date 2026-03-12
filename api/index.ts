@@ -1,13 +1,16 @@
-// Dynamic import so all errors are caught — prevents unhandled rejection crash
+import app, { initPromise } from "../server/api-handler";
+
+// Attach catch immediately so Node.js doesn't crash on unhandled rejection
+// if initPromise rejects before the first request handler runs.
+initPromise.catch(() => {});
+
 export default async function handler(req: any, res: any) {
   try {
-    const { default: app, initPromise } = await import("../server/api-handler");
     await initPromise;
-    app(req, res);
   } catch (err: any) {
-    console.error("Handler error:", err?.message, err?.stack);
-    if (!res.headersSent) {
-      res.status(500).json({ error: err?.message ?? String(err) });
-    }
+    console.error("Init failed:", err?.message, err?.stack);
+    res.status(500).json({ error: err?.message ?? String(err) });
+    return;
   }
+  app(req, res);
 }
