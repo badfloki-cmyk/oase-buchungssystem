@@ -1,10 +1,8 @@
-import { db, pool } from "./db";
+import { db } from "./db";
 import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "../shared/schema";
-import { eq, count, and } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
-
-const PostgresSessionStore = connectPg(session);
+import MemoryStore from "memorystore";
 
 export interface IStorage {
   sessionStore: session.Store;
@@ -39,14 +37,13 @@ export interface IStorage {
   markResetDone(): Promise<void>;
 }
 
+const SessionStore = MemoryStore(session);
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true,
-    });
+    this.sessionStore = new SessionStore({ checkPeriod: 86400000 });
   }
 
   async getUser(id: number): Promise<User | undefined> {
