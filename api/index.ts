@@ -1,4 +1,4 @@
-import app, { initPromise } from "../server/index";
+import app, { initPromise } from "../server/api-handler";
 
 export default async function handler(req: any, res: any) {
   try {
