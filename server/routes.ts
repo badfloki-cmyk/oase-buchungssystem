@@ -12,6 +12,23 @@ export async function registerRoutes(
   // Setup Authentication
   setupAuth(app);
 
+  // === DIAGNOSTICS ===
+  app.get("/api/health", async (_req, res) => {
+    try {
+      const { db } = await import("./db.js");
+      const { users } = await import("../shared/schema.js");
+      await db.select().from(users).limit(1);
+      res.json({ status: "ok", message: "Database connected", env: process.env.NODE_ENV });
+    } catch (err: any) {
+      console.error("Health check failed:", err);
+      res.status(500).json({
+        status: "error",
+        message: err?.message ?? String(err),
+        db_url_present: !!process.env.DATABASE_URL
+      });
+    }
+  });
+
   // === API ROUTES ===
 
   // Users List (for Dropdown)
