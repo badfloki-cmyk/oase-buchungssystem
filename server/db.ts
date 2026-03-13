@@ -4,7 +4,9 @@ import * as schema from "../shared/schema.js";
 
 const dbUrl = process.env.DATABASE_URL;
 
+console.log("Current environment keys:", Object.keys(process.env).join(", "));
 if (!dbUrl) {
+  console.error("DEBUG: DATABASE_URL is missing or undefined.");
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
