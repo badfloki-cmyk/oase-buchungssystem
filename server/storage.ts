@@ -2,7 +2,7 @@ import { db } from "./db.js";
 import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "../shared/schema.js";
 import { eq, count } from "drizzle-orm";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import PostgresSessionStore from "connect-pg-simple";
 
 export interface IStorage {
   sessionStore: session.Store;
@@ -37,13 +37,17 @@ export interface IStorage {
   markResetDone(): Promise<void>;
 }
 
-const SessionStore = MemoryStore(session);
+const PostgresStore = PostgresSessionStore(session);
 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new SessionStore({ checkPeriod: 86400000 });
+    this.sessionStore = new PostgresStore({
+      conString: process.env.DATABASE_URL,
+      tableName: "session",
+      createTableIfMissing: true,
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {

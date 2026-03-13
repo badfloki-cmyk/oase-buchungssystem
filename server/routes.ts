@@ -177,41 +177,43 @@ export async function registerRoutes(
       // We don't throw here to avoid crashing the serverless function during init
     });
 
-  // Auto-reset timer: check every 60 seconds for weekly recurring resets
-  // Disabled on Vercel (serverless functions don't support long-running timers)
-  // Configure a Vercel Cron Job pointing to /api/cron/reset instead
-  if (process.env.VERCEL) return httpServer;
-  setInterval(async () => {
-    try {
-      const s = await storage.getSettings();
-      if (!s || s.resetDay1 == null || s.resetDay2 == null || !s.resetTime) return;
+  // Middleware for lazy reset check (replaces setInterval for serverless)
+  app.use(async (req, _res, next) => {
+    // Only run on API routes to minimize overhead
+    if (req.path.startsWith('/api')) {
+      try {
+        const s = await storage.getSettings();
+        if (s && s.resetDay1 != null && s.resetDay2 != null && s.resetTime) {
+          const now = new Date();
+          const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+          const currentDay = berlinTime.getDay();
+          const currentTime = `${berlinTime.getHours().toString().padStart(2, '0')}:${berlinTime.getMinutes().toString().padStart(2, '0')}`;
 
-      const now = new Date();
-      const berlinTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-      const currentDay = berlinTime.getDay(); // 0=Sunday, 1=Monday, ...
-      const currentTime = `${berlinTime.getHours().toString().padStart(2, '0')}:${berlinTime.getMinutes().toString().padStart(2, '0')}`;
+          const isResetDay = currentDay === s.resetDay1 || currentDay === s.resetDay2;
+          const isPastTime = currentTime >= s.resetTime;
 
-      const isResetDay = currentDay === s.resetDay1 || currentDay === s.resetDay2;
-      const isPastTime = currentTime >= s.resetTime;
+          if (isResetDay && isPastTime) {
+            let alreadyReset = false;
+            if (s.lastResetAt) {
+              const lastReset = new Date(new Date(s.lastResetAt).toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+              alreadyReset = lastReset.getFullYear() === berlinTime.getFullYear() &&
+                lastReset.getMonth() === berlinTime.getMonth() &&
+                lastReset.getDate() === berlinTime.getDate();
+            }
 
-      if (isResetDay && isPastTime) {
-        // Check if already reset today
-        if (s.lastResetAt) {
-          const lastReset = new Date(new Date(s.lastResetAt).toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-          const sameDay = lastReset.getFullYear() === berlinTime.getFullYear() &&
-            lastReset.getMonth() === berlinTime.getMonth() &&
-            lastReset.getDate() === berlinTime.getDate();
-          if (sameDay) return; // Already reset today
+            if (!alreadyReset) {
+              console.log("Weekly auto-reset triggered (lazy) at", now.toISOString());
+              await storage.resetBookings();
+              await storage.markResetDone();
+            }
+          }
         }
-
-        console.log("Weekly auto-reset triggered at", now.toISOString());
-        await storage.resetBookings();
-        await storage.markResetDone();
+      } catch (err) {
+        console.error("Lazy reset check failed:", err);
       }
-    } catch (err) {
-      console.error("Auto-reset check failed:", err);
     }
-  }, 60000);
+    next();
+  });
 
   return httpServer;
 }
