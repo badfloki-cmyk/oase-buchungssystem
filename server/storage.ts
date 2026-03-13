@@ -148,12 +148,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSettings(data: { resetDay1: number | null; resetDay2: number | null; resetTime: string | null; lastResetAt?: Date | null }): Promise<Settings> {
+    console.log("DatabaseStorage: updateSettings called with data:", data);
     const existing = await this.getSettings();
     if (existing) {
+      console.log("Updating existing settings row ID:", existing.id);
       const [updated] = await db.update(settings).set(data).where(eq(settings.id, existing.id)).returning();
+      console.log("Update result:", updated);
       return updated;
     } else {
+      console.log("Creating new settings row");
       const [inserted] = await db.insert(settings).values(data).returning();
+      console.log("Insert result:", inserted);
       return inserted;
     }
   }

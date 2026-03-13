@@ -135,8 +135,13 @@ export async function registerRoutes(
 
   app.post(api.admin.updateSettings.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') return res.sendStatus(401);
+    console.log("Incoming settings update request:", req.body);
     const { resetDay1, resetDay2, resetTime } = api.admin.updateSettings.input.parse(req.body);
-    const updated = await storage.updateSettings({ resetDay1, resetDay2, resetTime, lastResetAt: null });
+
+    // We don't want to reset lastResetAt to null during a manual settings update
+    const updated = await storage.updateSettings({ resetDay1, resetDay2, resetTime });
+
+    console.log("Settings successfully updated in DB:", updated);
     res.json({
       resetDay1: updated.resetDay1 ?? null,
       resetDay2: updated.resetDay2 ?? null,
