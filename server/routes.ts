@@ -173,7 +173,8 @@ export async function registerRoutes(
   seedDatabase()
     .then(() => console.log("Seed check completed successfully."))
     .catch(err => {
-      console.warn("Seed check skipped or failed:", err?.message || err);
+      console.warn("Seed check skipped or failed. Detailed error:");
+      console.error(err);
       // We don't throw here to avoid crashing the serverless function during init
     });
 

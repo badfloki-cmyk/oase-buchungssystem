@@ -12,22 +12,30 @@ if (!dbUrl) {
   );
 }
 
-// Neon HTTP driver doesn't support some postgres query params like channel_binding
-// which might be present in some connection strings and cause crashes during init.
-let sanitizedUrl = dbUrl;
+// Basic sanitization: trim whitespace and remove problematic search params
+export let sanitizedUrl = dbUrl.trim();
 try {
-  const url = new URL(dbUrl);
+  const url = new URL(sanitizedUrl);
 
   // Log masked URL for debugging
   const maskedUrl = `${url.protocol}//${url.username}:****@${url.host}${url.pathname}${url.search}`;
-  console.log("DEBUG: Connecting to database:", maskedUrl);
+  console.log("DEBUG: Database connection string detected:", maskedUrl);
 
+  let changed = false;
   if (url.searchParams.has('channel_binding')) {
     url.searchParams.delete('channel_binding');
+    changed = true;
+  }
+
+  // sslmode=require is standard for Neon, but sometimes drivers handle it internally
+  // We'll keep it unless we find reason to remove it specifically.
+
+  if (changed) {
     sanitizedUrl = url.toString();
+    console.log("DEBUG: Sanitized URL (removed channel_binding)");
   }
 } catch (e) {
-  // Ignore URL parsing errors and use original string
+  console.warn("DEBUG: DATABASE_URL parsing failed, using trimmed raw string.");
 }
 
 console.log("Initializing database connection...");

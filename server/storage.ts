@@ -1,4 +1,4 @@
-import { db } from "./db.js";
+import { db, sanitizedUrl } from "./db.js";
 import { users, rooms, bookings, messages, settings, type User, type InsertUser, type Room, type InsertRoom, type Booking, type InsertBooking, type Message, type InsertMessage, type Settings } from "../shared/schema.js";
 import { eq, count } from "drizzle-orm";
 import session from "express-session";
@@ -44,7 +44,7 @@ export class DatabaseStorage implements IStorage {
 
   constructor() {
     this.sessionStore = new PostgresStore({
-      conString: process.env.DATABASE_URL,
+      conString: sanitizedUrl,
       tableName: "session",
       createTableIfMissing: true,
     });
