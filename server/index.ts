@@ -90,17 +90,24 @@ export default app;
 
 // Only start the HTTP server when NOT running on Vercel
 if (!process.env.VERCEL) {
-  initPromise.then(() => {
-    const port = parseInt(process.env.PORT || "5000", 10);
-    httpServer.listen(
-      {
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      },
-      () => {
-        log(`serving on port ${port}`);
-      },
-    );
-  });
+  console.log("Starting server in non-Vercel environment...");
+  initPromise
+    .then(() => {
+      console.log("Initialization promise resolved. Starting HTTP listener...");
+      const port = parseInt(process.env.PORT || "5000", 10);
+      httpServer.listen(
+        {
+          port,
+          host: "0.0.0.0",
+          reusePort: true,
+        },
+        () => {
+          log(`serving on port ${port}`);
+        },
+      );
+    })
+    .catch((err) => {
+      console.error("FATAL: Failed to initialize application:", err);
+      process.exit(1);
+    });
 }

@@ -23,11 +23,14 @@ try {
   // Ignore URL parsing errors and use original string
 }
 
+console.log("Initializing database connection...");
 const sql = neon(sanitizedUrl);
+console.log("Neon client created. Initializing Drizzle with schema...");
 
 // Export db directly. Drizzle 0.33+ should handle the neon client correctly.
 // If there's a proxy issue, this direct export avoids it.
 export const db = drizzle(sql, { schema });
+console.log("Database storage initialized.");
 
 // Keep getDb for compatibility if needed, but we'll use the direct export
 export function getDb() {
