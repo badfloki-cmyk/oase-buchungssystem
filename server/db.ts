@@ -17,6 +17,11 @@ if (!dbUrl) {
 let sanitizedUrl = dbUrl;
 try {
   const url = new URL(dbUrl);
+
+  // Log masked URL for debugging
+  const maskedUrl = `${url.protocol}//${url.username}:****@${url.host}${url.pathname}${url.search}`;
+  console.log("DEBUG: Connecting to database:", maskedUrl);
+
   if (url.searchParams.has('channel_binding')) {
     url.searchParams.delete('channel_binding');
     sanitizedUrl = url.toString();
